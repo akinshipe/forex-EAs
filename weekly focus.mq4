@@ -1,17 +1,16 @@
-//|$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-//|              Close 
-//|   Last Updated 12-12-2006 10:00pm
-//|$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 #define     NL    "\n" 
 
 
 
-        //this is the degree at which 19:00 bar should be greater than 18:59 bar before it is identified as a swing
+       
 extern double lot_size = 0.01;
 
-
+// this is used to keep track of maximal drawdown and ups
 double    MaximalDrawDown = 0;
 double    MaximalDrawUp = 0;
+
+int      LastWriteHour = -1;
 
 
 //+-------------+
@@ -31,7 +30,7 @@ int deinit()
   }
 
 //+------------------------------------------------------------------------+
-//| Closes everything
+//| Closes all open tarde
 //+------------------------------------------------------------------------+
 void CloseAll()
 {
@@ -71,6 +70,9 @@ void CloseAll()
               }           
                          
 }
+
+
+
    
 
 
@@ -90,13 +92,13 @@ int start()
    
    string trade_currency[27] =         { "yes",      "yes",      "yes",    "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",      "yes",     "yes"} ;
    
-   string trade_direction[27] =        {  0,         0,         0,       1,        -1,        0,        1,         0,        0,        0,       0,        0,         0,       0,        1,         0,        0,       0,         0,       0,         0,        1,        0,       1,         0,        0,        0   } ;    
+   string trade_direction[27] =        {  0,         0,         0,       0,        0,        0,        0,         0,        0,        0,       0,        0,         0,       0,        0,         0,        0,       0,         0,       0,         0,        0,        0,       0,         0,        0,        -0   } ;    
                                            
    double ask_price, bid_price;
    
    double profit ;
   
-   
+    bool filehandle;
    
    
   
@@ -138,7 +140,7 @@ int start()
         
         // code to trade
        
-      if( DayOfWeek()== 1 && Hour()== 0 && Minute() >10  ){
+      if( DayOfWeek()== 1 && Hour()== 1 && Minute() >1  ){
        
       
        // loop through current open orders and turn of trade for currencies already in open position
@@ -207,7 +209,7 @@ int start()
      
      
     
-    // calculate current profit or loss
+    // calculate current profit or loss and write info to csv if it is the appriopriate time
     
     for( int g=0 ;g < OrdersTotal(); g++ ){
             
@@ -215,14 +217,52 @@ int start()
                         // We select the order of index i selecting by position and from the pool of market/pending trades.
                            OrderSelect( g, SELECT_BY_POS, MODE_TRADES ); 
                              
-                           if ( OrderSymbol() == currency_list[g]){
+                                                             
+                           profit = profit + OrderProfit() ;
+                           
+                           
+                           
+                          
+                           // checks if it is the appriorpriate time and then writes to the csv file
+                           if(  Minute() == 30 && LastWriteHour != Hour()   ){
+     
+                                       ResetLastError();
+                                       filehandle = FileOpen("weekly_focus_data.csv",FILE_CSV|FILE_READ|FILE_WRITE);
+                                       
+                                       if(filehandle!=INVALID_HANDLE){
+                                       
+                                                   FileSeek(filehandle, 0, SEEK_END);
+                                                   FileWrite(filehandle, DayOfWeek(),  Hour(), Minute(), OrderSymbol(), OrderType(), OrderProfit(), MarketInfo(OrderSymbol(), MODE_SPREAD)   );
+                                                   FileClose(filehandle);
+                                                   
+                                                   // checking if the loop has finished so that it can store the value of last time to avoid duplicationg rows
+                                                   if ( OrdersTotal()- g ==1){
+                                                   
+                                                             LastWriteHour = Hour();
+                                                             Print("FileOpen OK", Hour());
+                                                   
+                                                   }
+                                                  
+                                                   
+                                                   
+                                        }
+                        
+                                        else Print("Operation FileOpen failed, error ",GetLastError());
+     
+                            };
                                     
-                                    profit = profit + OrderProfit() ;
+                          
                                     
-                           } 
+                                    
+                                    
+                                    
+                                    
+                                    
                                                        
      }   
-       
+   
+   
+   
        
     // save current profit or loss if they are above maximal drawdown or drawup
     
