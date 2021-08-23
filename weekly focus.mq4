@@ -92,7 +92,7 @@ int start()
    
    string trade_currency[27] =         { "yes",      "yes",      "yes",    "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",     "yes",      "yes",     "yes"} ;
    
-   string trade_direction[27] =        {  0,         0,         0,       0,        0,        0,        0,         0,        0,        0,       0,        0,         0,       0,        0,         0,        0,       0,         0,       0,         0,        0,        0,       0,         0,        0,        0   } ;    
+   string trade_direction[27] =        {  0,        -1,        -1,       0,        0,        -1,        0,       -1,        0,        0,       0,        -1,         0,       0,        0,        0,        0,       0,         0,       0,         0,        0,        0,       0,         -1,        0,        0   } ;    
                                            
    double ask_price, bid_price;
    
